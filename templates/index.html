@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>sklearn.preprocessing.MinMaxScaler — demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg-body: #111827;
+      --bg-nav: #020617;
+      --bg-panel: #020617;
+      --bg-code: #020617;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --link: #38bdf8;
+      --border: #1f2937;
+      --accent: #22c55e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at top, #0b1220 0, #020617 40%, #020617 100%);
+      color: var(--text-main);
+      line-height: 1.5;
+    }
+
+    /* Top navigation like scikit docs (dark) */
+    .top-nav {
+      background: rgba(15, 23, 42, 0.98);
+      color: #e5e7eb;
+      padding: 0.65rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #1f2937;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(16px);
+    }
+
+    .top-nav-left {
+      display: flex;
+      align-items: center;
+      gap: 1.8rem;
+    }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .logo-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #f97316, #facc15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .logo-text {
+      font-weight: 650;
+      font-size: 1rem;
+      letter-spacing: 0.03em;
+    }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+      margin-left: 1rem;
+    }
+
+    .nav-links a {
+      color: #e5e7eb;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .nav-links a:hover {
+      color: var(--link);
+    }
+
+    .top-nav-right {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+    }
+
+    .top-nav-right a {
+      color: #e5e7eb;
+      text-decoration: none;
+    }
+
+    .top-nav-right a:hover {
+      color: var(--link);
+    }
+
+    /* Layout */
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .sidebar {
+      flex: 0 0 260px;
+      font-size: 0.9rem;
+      border-right: 1px solid var(--border);
+      padding-right: 1rem;
+    }
+
+    .sidebar h3 {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+    }
+
+    .sidebar ul {
+      list-style: none;
+      margin: 0 0 1rem;
+      padding-left: 0.1rem;
+      max-height: calc(100vh - 140px);
+      overflow-y: auto;
+    }
+
+    .sidebar li {
+      margin: 0.12rem 0;
+    }
+
+    .sidebar a {
+      text-decoration: none;
+      color: var(--text-muted);
+      padding: 0.1rem 0.2rem;
+      display: inline-block;
+      border-radius: 4px;
+    }
+
+    .sidebar a:hover {
+      color: var(--link);
+    }
+
+    .sidebar .active {
+      color: #f9fafb;
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    .main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .breadcrumb {
+      font-size: 0.8rem;
+      margin-bottom: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .breadcrumb a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+      color: var(--link);
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin: 0.3rem 0 0.5rem;
+    }
+
+    h2 {
+      font-size: 1.3rem;
+      margin-top: 1.6rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.3rem;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      margin-top: 1.2rem;
+    }
+
+    p {
+      margin: 0.3rem 0 0.6rem;
+      color: #e5e7eb;
+    }
+
+    code {
+      font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.9rem;
+    }
+
+    pre {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.9rem;
+      margin-top: 0.6rem;
+    }
+
+    .signature {
+      font-size: 0.95rem;
+      background: radial-gradient(circle at top left, #1e293b, #020617);
+      border: 1px solid #1f2937;
+      padding: 0.8rem 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .signature code {
+      color: #e5e7eb;
+    }
+
+    .note {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .param-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    .param-table th,
+    .param-table td {
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.6rem;
+      vertical-align: top;
+    }
+
+    .param-table th {
+      background: #020617;
+      text-align: left;
+      width: 26%;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .param-table td {
+      color: #e5e7eb;
+    }
+
+    .footer {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem 2rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+
+    .footer a {
+      color: var(--link);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Bottom snippet box (збереження тексту) */
+    .snippet-box {
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .snippet-box h2 {
+      margin-top: 0;
+      font-size: 1.25rem;
+      border: none;
+      padding-bottom: 0;
+    }
+
+    .snippet-box p.helper {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 0.6rem;
+    }
+
+    #code-input {
+      width: 100%;
+      min-height: 160px;
+      font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.9rem;
+      background: #020617;
+      color: #e5e7eb;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+      padding: 0.8rem 0.9rem;
+      resize: vertical;
+      outline: none;
+      white-space: pre;
+      overflow-wrap: normal;
+      overflow-x: auto;
+    }
+
+    #code-input:focus {
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.7);
+      border-color: #38bdf8;
+    }
+
+    .snippet-actions {
+      margin-top: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    #save-btn {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #04101a;
+    }
+
+    #save-btn:hover {
+      background: linear-gradient(135deg, #22c55e, #15803d);
+    }
+
+    #copy-btn {
+      background: transparent;
+      border: 1px solid #374151;
+      color: #e5e7eb;
+    }
+
+    #copy-btn:hover {
+      border-color: #6b7280;
+    }
+
+    #status {
+      font-size: 0.85rem;
+      min-height: 1em;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .page {
+        flex-direction: column;
+      }
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        flex: unset;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .top-nav {
+        padding: 0.5rem 1rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+      }
+      .top-nav-left {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-nav">
+    <div class="top-nav-left">
+      <div class="logo-wrap">
+        <div class="logo-badge">sk</div>
+        <div class="logo-text">scikit-learn</div>
+      </div>
+      <nav class="nav-links">
+        <a href="#">Install</a>
+        <a href="#">User Guide</a>
+        <a href="#" style="border-bottom: 2px solid #38bdf8; padding-bottom: 0.1rem;">API</a>
+        <a href="#">Examples</a>
+        <a href="#">Community</a>
+        <a href="#">More</a>
+      </nav>
+    </div>
+    <div class="top-nav-right">
+      <span>1.2 (stable)</span>
+      <span>•</span>
+      <a href="#">GitHub</a>
+    </div>
+  </header>
+
+  <main class="page">
+    <aside class="sidebar">
+      <h3>API Reference</h3>
+      <ul>
+        <li><a href="#">FunctionTransformer</a></li>
+        <li><a href="#">KBinsDiscretizer</a></li>
+        <li><a href="#">KernelCenterer</a></li>
+        <li><a href="#" class="active">MinMaxScaler</a></li>
+        <li><a href="#">StandardScaler</a></li>
+        <li><a href="#">RobustScaler</a></li>
+        <li><a href="#">Normalizer</a></li>
+        <li><a href="#">PowerTransformer</a></li>
+      </ul>
+    </aside>
+
+    <section class="main">
+      <div class="breadcrumb">
+        <a href="#">API Reference</a> >
+        <a href="#">sklearn.preprocessing</a> >
+        <span>MinMaxScaler</span>
+      </div>
+
+      <h1>MinMaxScaler</h1>
+
+      <div class="signature">
+        <code>class sklearn.preprocessing.MinMaxScaler(feature_range=(0, 1), *, copy=True, clip=False)</code>
+      </div>
+
+      <p>
+        Transform features by scaling each feature to a given range.
+        This estimator scales and translates each feature individually such that it is
+        in the given range on the training set, e.g. between zero and one.
+      </p>
+
+      <p class="note">
+        Ця сторінка — стилізований демо-клон документації scikit-learn, а не оригінал.
+      </p>
+
+      <h2>Parameters</h2>
+      <table class="param-table">
+        <tr>
+          <th><code>feature_range</code> : tuple (min, max), default=(0, 1)</th>
+          <td>
+            Desired range of transformed data.
+          </td>
+        </tr>
+        <tr>
+          <th><code>copy</code> : bool, default=True</th>
+          <td>
+            Set to <code>False</code> to perform inplace row scaling and avoid a copy.
+          </td>
+        </tr>
+        <tr>
+          <th><code>clip</code> : bool, default=False</th>
+          <td>
+            Set to <code>True</code> to clip transformed values of held-out data to
+            provided <code>feature_range</code>.
+          </td>
+        </tr>
+      </table>
+
+      <h2>Example</h2>
+      <pre><code>from sklearn.preprocessing import MinMaxScaler
+import numpy as np
+
+X = np.array([[1., -1., 2.],
+              [2.,  0., 0.],
+              [0.,  1., -1.]])
+
+scaler = MinMaxScaler()
+X_scaled = scaler.fit_transform(X)
+
+print(X_scaled)</code></pre>
+
+      <!-- Блок для збереження тексту між користувачами -->
+      <div class="snippet-box" id="snippet">
+        <h2>Спільний код / текст</h2>
+        <p class="helper">
+          Будь-хто може вставити сюди свій код або текст, натиснути
+          <strong>«Зберегти»</strong>, і цей текст побачать інші при відкритті сторінки
+          (поки застосунок не буде перезапущено).
+        </p>
+        <textarea id="code-input" placeholder="# Вставте свій код тут...&#10;print('Hello from MinMaxScaler demo')"></textarea>
+        <div class="snippet-actions">
+          <button id="save-btn" type="button">Зберегти</button>
+          <button id="copy-btn" type="button">Копіювати</button>
+          <span id="status"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Demo-проєкт для бакалаврської / навчальної роботи. Стиль наближений до
+    документації scikit-learn, але не є офіційною сторінкою.
+  </footer>
+
+  <script>
+    const textarea = document.getElementById('code-input');
+    const saveBtn = document.getElementById('save-btn');
+    const copyBtn = document.getElementById('copy-btn');
+    const statusEl = document.getElementById('status');
+
+    function setStatus(text, ok = true) {
+      statusEl.textContent = text;
+      statusEl.style.color = ok ? '#22c55e' : '#f97373';
+      if (text) {
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 2500);
+      }
+    }
+
+    async function loadText() {
+      try {
+        const res = await fetch('/api/text');
+        const data = await res.json();
+        textarea.value = data.text || '';
+      } catch (e) {
+        setStatus('Не вдалось завантажити текст', false);
+      }
+    }
+
+    async function saveText() {
+      try {
+        const res = await fetch('/api/text', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({text: textarea.value}),
+        });
+        if (!res.ok) throw new Error();
+        setStatus('Текст збережено ✅', true);
+      } catch (e) {
+        setStatus('Помилка при збереженні 😢', false);
+      }
+    }
+
+    async function copyText() {
+      const text = textarea.value;
+      if (!text) {
+        setStatus('Немає що копіювати', false);
+        return;
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(text);
+          setStatus('Скопійовано у буфер обміну', true);
+          return;
+        } catch (e) {
+          // fallback нижче
+        }
+      }
+
+      textarea.select();
+      textarea.setSelectionRange(0, text.length);
+      const ok = document.execCommand('copy');
+      window.getSelection().removeAllRanges();
+      setStatus(ok ? 'Скопійовано у буфер обміну' : 'Не вдалося скопіювати', ok);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadText);
+    saveBtn.addEventListener('click', saveText);
+    copyBtn.addEventListener('click', copyText);
+  </script>
+</body>
+</html>
