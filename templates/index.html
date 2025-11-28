@@ -5,6 +5,7 @@
   <title>sklearn.model_selection.train_test_split — scikit-learn 1.7.2 documentation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    /* Весь CSS залишається без змін */
     :root {
       --bg-body: #0d1117;
       --bg-main: #0d1117;
@@ -883,8 +884,6 @@ array([[<span class="code-number">2</span>, <span class="code-number">3</span>],
 [[<span class="code-number">0</span>, <span class="code-number">1</span>, <span class="code-number">2</span>], [<span class="code-number">3</span>, <span class="code-number">4</span>]]</code></pre>
         </div>
 
-        
-
         <!-- COMPACT SNIPPET SECTION -->
         <section class="snippet-section" id="snippet">
           <div class="snippet-container">
@@ -912,7 +911,6 @@ array([[<span class="code-number">2</span>, <span class="code-number">3</span>],
           <li class="toc-item"><a class="toc-link" href="#parameters">Parameters</a></li>
           <li class="toc-item"><a class="toc-link" href="#returns">Returns</a></li>
           <li class="toc-item"><a class="toc-link" href="#examples">Examples</a></li>
-          <li class="toc-item"><a class="toc-link" href="#gallery">Gallery examples</a></li>
         </ul>
         <div class="toc-title" style="margin-top:1.5rem;">Show Source</div>
       </aside>
@@ -959,7 +957,7 @@ array([[<span class="code-number">2</span>, <span class="code-number">3</span>],
       });
     });
 
-    // Snippet functionality
+    // ===== ОНОВЛЕНИЙ КОД: Робота з сервером =====
     const textarea = document.getElementById('code-input');
     const saveBtn = document.getElementById('save-btn');
     const copyBtn = document.getElementById('copy-btn');
@@ -976,22 +974,45 @@ array([[<span class="code-number">2</span>, <span class="code-number">3</span>],
       }
     }
 
-    // Save functionality (localStorage)
-    saveBtn.addEventListener('click', () => {
+    // Завантажити текст з сервера при завантаженні сторінки
+    async function loadText() {
+      try {
+        const response = await fetch('/api/text');
+        const data = await response.json();
+        textarea.value = data.text || '';
+      } catch (e) {
+        console.error('Помилка завантаження:', e);
+      }
+    }
+
+    // Зберегти текст на сервер
+    async function saveText() {
       const text = textarea.value;
       if (!text.trim()) {
         setStatus('Немає що зберігати', 'error');
         return;
       }
       try {
-        localStorage.setItem('sklearn_snippet', text);
-        setStatus('✓ Збережено', 'success');
+        const response = await fetch('/api/text', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ text: text })
+        });
+        const data = await response.json();
+        if (data.status === 'ok') {
+          setStatus('✓ Збережено', 'success');
+        } else {
+          setStatus('Помилка збереження', 'error');
+        }
       } catch (e) {
+        console.error('Помилка збереження:', e);
         setStatus('Помилка збереження', 'error');
       }
-    });
+    }
 
-    // Copy functionality
+    // Копіювати текст
     async function copySnippet() {
       const text = textarea.value;
       if (!text.trim()) {
@@ -1013,15 +1034,15 @@ array([[<span class="code-number">2</span>, <span class="code-number">3</span>],
       }
     }
 
+    // Event listeners
+    saveBtn.addEventListener('click', saveText);
     copyBtn.addEventListener('click', copySnippet);
 
-    // Load saved snippet on page load
-    window.addEventListener('DOMContentLoaded', () => {
-      const saved = localStorage.getItem('sklearn_snippet');
-      if (saved) {
-        textarea.value = saved;
-      }
-    });
+    // Завантажити текст при завантаженні сторінки
+    window.addEventListener('DOMContentLoaded', loadText);
+
+    // Автоматично оновлювати текст кожні 5 секунд (щоб бачити зміни від інших користувачів)
+    setInterval(loadText, 5000);
 
     // Active TOC link on scroll
     const sections = document.querySelectorAll('h2[id]');
